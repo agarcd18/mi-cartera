@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mi cartera</title>
+<meta name="description" content="Panel personal de mi cartera de fondos indexados">
+<meta name="theme-color" content="#4f46e5">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mi cartera">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="stylesheet" href="css/styles.css">
+<script>
+  // Aplica el tema antes de pintar para evitar parpadeo.
+  try { var s = JSON.parse(localStorage.getItem('cartera.v1') || '{}'); var t = s.config && s.config.tema; if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+</head>
+<body>
+<main class="wrap" id="view" aria-live="polite"></main>
+<nav class="tabs" aria-label="Secciones"><div class="in" id="tabs"></div></nav>
+<div id="modal" hidden></div>
+<div id="toast" class="toast" hidden></div>
+<noscript><p style="padding:20px">Esta aplicación necesita JavaScript.</p></noscript>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
