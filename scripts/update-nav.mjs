@@ -23,8 +23,10 @@ for (const [isin, urls] of Object.entries(sources)) {
       const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 20000);
       const res = await fetch(url, { signal: ctl.signal, headers: { 'user-agent': 'Mozilla/5.0 (compatible; mi-cartera-personal/1.0; consulta diaria personal)', 'accept-language': 'de,es;q=0.8' } });
       clearTimeout(to);
-      if (!res.ok) { fails.push(`${url} → HTTP ${res.status}`); continue; }
-      const r = parseFundPage(await res.text(), isin);
+      const body = await res.text();
+      console.log(`  ${url} → HTTP ${res.status}, ${body.length} bytes, ${res.headers.get('content-type')}`);
+      if (!res.ok) { fails.push(`${url} → HTTP ${res.status}${/captcha|cloudflare|access denied|robot/i.test(body) ? ' (parece bloqueo anti-bots)' : ''}`); continue; }
+      const r = parseFundPage(body, isin);
       if (r.error) { fails.push(`${url} → ${r.error}`); continue; }
       got = { ...r, source: new URL(url).hostname.replace(/^www\./, '') };
       break;
