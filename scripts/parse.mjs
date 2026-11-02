@@ -31,13 +31,20 @@ const PATTERNS = [
 
 export function parseFundPage(html, isin) {
   const text = htmlToText(html);
-  if (isin && !text.includes(isin)) return { error: `La página no menciona el ISIN ${isin}` };
+  if (isin && !html.includes(isin) && !text.includes(isin)) {
+    const title = (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1]?.replace(/\s+/g, ' ').trim().slice(0, 120);
+    return { error: `La página no menciona el ISIN ${isin} (título: «${title ?? 'sin título'}», ${html.length} bytes, ¿bloqueo/consentimiento?)` };
+  }
   const found = [];
   for (const p of PATTERNS) {
     const m = text.match(p.re);
     if (m) found.push({ pat: p.name, nav: toNum(m[1]), date: toIso(m[2]) });
   }
-  if (!found.length) return { error: 'No se reconoce el formato de la página (¿ha cambiado?)' };
+  if (!found.length) {
+    const i = text.search(/\d,\d{2} EUR/);
+    const ctx = i >= 0 ? text.slice(Math.max(0, i - 150), i + 250) : text.slice(0, 300);
+    return { error: `No se reconoce el formato de la página (¿ha cambiado?). Texto (${text.length} car.) cerca del primer precio: «${ctx}»` };
+  }
   const first = found[0];
   for (const f of found) {
     if (f.nav !== first.nav || f.date !== first.date) return { error: `Patrones en desacuerdo: ${JSON.stringify(found)}` };
