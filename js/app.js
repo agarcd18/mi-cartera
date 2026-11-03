@@ -145,6 +145,7 @@ function viewInicio(v, ctx) {
       <div class="small muted" style="margin-top:12px">Aportado: <span class="num">${eur(val.capital)}</span></div>
     </section>
     <section class="card" id="fondos"></section>
+    <button class="btn block" id="updPrices" style="margin-bottom:14px">Actualizar precios a mano</button>
     <section class="card"><h3>Distribución</h3><div class="donut-row"><div id="donut" style="flex:0 0 130px"></div><div class="legend" id="legend"></div></div></section>
     ${sinPos ? '<div class="banner info">Introduce tus participaciones en Ajustes.</div>' : ''}
   `;
@@ -154,9 +155,50 @@ function viewInicio(v, ctx) {
       <div><div class="name">${esc(f.corto)}</div><div class="sub num">${n ? `${f2.format(n.nav)} € · ${fDateS(n.date)}${n.manual ? ' (manual)' : ''}` : 'sin precio'}</div></div>
       <div class="val"><div class="a num">${eur(r.valor)}</div><div class="b num ${cls(r.rent)}">${r.valor === null ? '—' : `${pctS(r.rent)} · ${eurS(r.ganancia)}`}</div></div></div>`;
   }).join('');
+  $('#updPrices').onclick = priceForm;
   const items = val.rows.filter((r) => r.valor > 0).map((r) => ({ label: fundOf(r.id).corto, value: r.valor, color: colorOf(r.id), peso: r.peso }));
   donut($('#donut'), items, 'Total', val.total > 0 ? eur(val.total, 0) : '—');
   $('#legend').innerHTML = items.map((i) => `<div><i style="background:${i.color}"></i><span>${esc(i.label)}</span><span class="num"><b>${pct(i.peso)}</b><br><span class="muted small">${eur(i.value, 0)}</span></span></div>`).join('') || '<span class="muted">Sin datos</span>';
+}
+
+
+/* ───────────── Actualizar precios (entrada rápida) ───────────── */
+const FICHAS = {
+  LU0996179007: 'https://www.finanzen.net/fonds/amundi-sp-500-screened-index-ae-lu0996179007',
+  LU0996182563: 'https://www.finanzen.at/fonds/amundi-index-solutions-amundi-index-msci-world-ae-c-lu0996182563',
+  LU0996175948: 'https://www.finanzen.net/fonds/amundi-index-solutions-amundi-core-msci-emerging-markets-ie-c-lu0996175948',
+};
+function priceForm() {
+  const ctx = compute(), fs = state.config.funds, m = $('#modal');
+  m.hidden = false;
+  m.innerHTML = `<div class="modal" id="mbg"><form class="sheet" id="pform" autocomplete="off">
+    <h2 style="margin-top:0">Actualizar precios</h2>
+    <p class="small muted" style="margin-top:0">Escribe el valor liquidativo de cada fondo y la fecha a la que corresponde (no tiene por qué ser hoy). Deja vacío el que no quieras cambiar.</p>
+    <div class="field"><label>Fecha del valor liquidativo</label><input type="date" name="d" value="${today()}" max="${today()}" required></div>
+    ${fs.map((f) => { const n = ctx.navInfo[f.id]; const url = FICHAS[f.isin] || `https://www.google.com/search?q=${encodeURIComponent(f.isin + ' valor liquidativo')}`;
+      return `<div class="field"><label>${esc(f.corto)} · último: ${n ? f2.format(n.nav) + ' € (' + fDateS(n.date) + ')' : 'sin precio'} · <a href="${esc(url)}" target="_blank" rel="noopener">ver ficha</a></label><input name="nav_${esc(f.id)}" inputmode="decimal" placeholder="p. ej. 603,71"></div>`; }).join('')}
+    <div id="perr" class="err" hidden></div>
+    <div class="row"><button class="btn" type="submit">Guardar</button><button class="btn ghost" type="button" id="pcancel">Cancelar</button></div></form></div>`;
+  const close = () => { m.hidden = true; m.innerHTML = ''; };
+  $('#pcancel').onclick = close;
+  $('#mbg').onclick = (e) => { if (e.target.id === 'mbg') close(); };
+  $('#pform').onsubmit = (e) => {
+    e.preventDefault();
+    const fd = new FormData($('#pform')), d = fd.get('d'), errs = [], todo = [];
+    if (!C.isIso(d) || d > today()) errs.push('Fecha no válida.');
+    for (const f of fs) {
+      const raw = String(fd.get('nav_' + f.id) || '').trim(); if (!raw) continue;
+      const v = C.parseNum(raw), cur = ctx.navInfo[f.id];
+      if (!(v > 0)) { errs.push(`${f.corto}: número no válido.`); continue; }
+      if (cur && d < cur.date) { errs.push(`${f.corto}: ya hay un precio más reciente (${fDate(cur.date)}); esa fecha es anterior.`); continue; }
+      if (cur && Math.abs(v / cur.nav - 1) > 0.15 && !confirm(`${f.corto}: ${f2.format(v)} € difiere más de un 15 % del último (${f2.format(cur.nav)} €). ¿Es correcto?`)) continue;
+      todo.push([f.id, v]);
+    }
+    if (!errs.length && !todo.length) errs.push('No has escrito ningún precio.');
+    if (errs.length) { const er = $('#perr'); er.hidden = false; er.innerHTML = errs.map(esc).join('<br>'); return; }
+    for (const [id, v] of todo) state.manualNav[id] = (state.manualNav[id] || []).filter((x) => x.d !== d).concat({ d, nav: v });
+    persist(); close(); toast(`${todo.length} precio(s) guardado(s)`); render();
+  };
 }
 
 /* ───────────── Evolución ───────────── */
