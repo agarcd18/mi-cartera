@@ -1,20 +1,20 @@
 {
-  "generated": "2026-10-30T23:06:37.711Z",
+  "generated": "2026-11-03T11:17:19.900Z",
   "funds": {
     "LU0996179007": {
-      "nav": 593.41,
-      "date": "2026-10-29",
-      "source": "finanzen.net"
+      "nav": 582.88,
+      "date": "2026-10-30",
+      "source": "yahoo(0P00012SJB.F)"
     },
     "LU0996182563": {
-      "nav": 441.74,
-      "date": "2026-10-29",
-      "source": "finanzen.at"
+      "nav": 435.2,
+      "date": "2026-10-30",
+      "source": "yahoo(0P00012PP6.F)"
     },
     "LU0996175948": {
-      "nav": 260.18,
-      "date": "2026-10-28",
-      "source": "finanzen.net"
+      "nav": 252.95,
+      "date": "2026-10-30",
+      "source": "yahoo(LU0996175948.LU)"
     }
   },
   "errors": {}
