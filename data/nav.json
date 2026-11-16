@@ -1,15 +1,15 @@
 {
-  "generated": "2026-11-14T00:25:49.415Z",
+  "generated": "2026-11-16T17:18:38.002Z",
   "funds": {
     "LU0996179007": {
       "nav": 578.89,
       "date": "2026-11-12",
-      "source": "yahoo(LU0996179007.LU)"
+      "source": "yahoo(0P00012SJB.F)"
     },
     "LU0996182563": {
       "nav": 439.78,
       "date": "2026-11-12",
-      "source": "yahoo(LU0996182563.LU)"
+      "source": "yahoo(0P00012PP6.F)"
     },
     "LU0996175948": {
       "nav": 251.43,
